@@ -2,10 +2,23 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import os
 import requests
+def web_search(query: str, max_results: int = 5):
+    results = []
+    with DDGS() as ddgs:
+        for r in ddgs.text(query, max_results=max_results):
+            results.append({
+                "title": r.get("title"),
+                "body": r.get("body"),
+                "url": r.get("href")
+            })
+    return results
 
 app = FastAPI()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+if not GROQ_API_KEY:
+    raise RuntimeError("GROQ_API_KEY is not set")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 class ChatRequest(BaseModel):
@@ -23,7 +36,8 @@ def chat(req: ChatRequest):
     }
 
     payload = {
-        "model": "llama3-8b-8192",
+        "model": ""llama-3.1-8b-instant"
+",
         "messages": [
             {"role": "system", "content": "You are a helpful AI assistant."},
             {"role": "user", "content": req.message}
